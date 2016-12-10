@@ -27,6 +27,7 @@ namespace Generator_semaforów
         private int kolejnoscpowtarzacza;
 
         // odchylenie semafora
+        // -1 - semafor karzełkowy
         // 0 - lewo
         // 1 - prosto
         // 2 - prawo
@@ -45,7 +46,6 @@ namespace Generator_semaforów
         private bool w24;
 
         // opcje dodatkowe
-        private bool karzelk;
         private bool uniew;
 
         // pasy
@@ -66,6 +66,9 @@ namespace Generator_semaforów
         private int komora4;
         private int komora5;
 
+        // ilość komór
+        private int ilosckomor;
+
         //predkosci na semaforach
         private bool predkosc40;
         private bool predkosc60;
@@ -73,6 +76,9 @@ namespace Generator_semaforów
         private bool predkosc40na60;
         private bool predkosc100naVmax;
         private bool komoraBiala;
+
+        // zmienna przechowująca kod
+        private string kod;
 
         #endregion
 
@@ -89,7 +95,6 @@ namespace Generator_semaforów
             w19 = false;
             w20 = false;
             w24 = false;
-            karzelk = false;
             uniew = false;
             ppom = false;
             pziel = false;
@@ -104,6 +109,7 @@ namespace Generator_semaforów
             predkosc40na60 = false;
             predkosc100naVmax = false;
             komoraBiala = false;
+            kod = "";
            
             InitializeComponent();
 
@@ -234,7 +240,7 @@ namespace Generator_semaforów
 
         private void OpcjonalnyKarzeklowy_CheckedChanged(object sender, EventArgs e)
         {
-            karzelk = OpcjonalnyKarzelkowy.Checked;
+            odchylsemafora = -1;
         }
 
         private void OpcjonalnyUniewazniony_CheckedChanged(object sender, EventArgs e)
@@ -299,7 +305,306 @@ namespace Generator_semaforów
 
         private void Generuj_Click(object sender, EventArgs e)
         {
-
+            // czyszczenie "cache"
+            kod = "";
+            // ustalanie ilości komór
+            if (komora1 > 0)
+                ilosckomor = 5;
+            else if (komora2 > 0)
+                ilosckomor = 4;
+            else if (komora3 > 0)
+                ilosckomor = 3;
+            else if (komora4 > 0)
+                ilosckomor = 2;
+            else if (komora5 > 0)
+                ilosckomor = 1;
+            else
+                ilosckomor = 0;
+            // GENEROWANIE
+            // jeśli wybrano wpis do notatnika, to dodatkowo zostanie dodany wpis "dynamic_xx"
+            {
+                if (wst == 0)
+                {
+                    if (typsemafora == 0)
+                        kod += "dynamic_rs";
+                    else if (typsemafora == 1)
+                        kod += "dynamic_ds";
+                    else if (typsemafora == 2)
+                        kod += "dynamic_sr";
+                    else if (typsemafora == 3)
+                        kod += "dynamic_ss";
+                    else if (typsemafora == 4)
+                        kod += "dynamic_rs";
+                    if (odchylsemafora == -1)
+                        kod += "_small,";
+                    else if (odchylsemafora == 0)
+                        kod += "_y,";
+                    else if (odchylsemafora == 1)
+                        kod += ",";
+                    else if (odchylsemafora == 2)
+                        kod += "_yn,";
+                }
+                // wpis słupa
+                if (typsemafora == 0)
+                    kod += "slup-ps";
+                else if (typsemafora == 4)
+                    kod += "slup-sbl";
+                else if (odchylsemafora > -1)
+                    kod += "slup-sm";
+                if (odchylsemafora == -1)
+                    kod += ",";
+                else if (odchylsemafora == 0)
+                    kod += "-y,";
+                else if (odchylsemafora == 1)
+                    kod += "-n,";
+                else if (odchylsemafora == 2)
+                    kod += "-yn,";
+                // wpis głowicy
+                if (odchylsemafora == -1)
+                {
+                    if (typsemafora == 0)
+                        kod += ilosckomor + "k-ps-k,";
+                    else
+                        kod += ilosckomor + "k-sm-k,";
+                }
+                else if (odchylsemafora == 1)
+                {
+                    if (typsemafora == 0)
+                        kod += ilosckomor + "k-ps-p,";
+                    else
+                        kod += ilosckomor + "k-sm-p,";
+                }
+                else
+                    kod += ilosckomor + "k-b-yny,";
+                // wpis drabinki
+                if (ilosckomor >= 1 & ilosckomor <= 2)
+                {
+                    kod += "drab-2k-";
+                    if (odchylsemafora == 0)
+                        kod += "y,";
+                    else if (odchylsemafora == 1)
+                        kod += "p,";
+                    else if (odchylsemafora == 2)
+                        kod += "yn,";
+                }
+                else if (ilosckomor >= 3 & ilosckomor <= 4)
+                {
+                    kod += "drab-4k-";
+                    if (odchylsemafora == 0)
+                        kod += "y,";
+                    else if (odchylsemafora == 1)
+                        kod += "p,";
+                    else if (odchylsemafora == 2)
+                        kod += "yn,";
+                }
+                else if (ilosckomor == 5)
+                {
+                    kod += "drab-5k-";
+                    if (odchylsemafora == 0)
+                        kod += "y,";
+                    else if (odchylsemafora == 1)
+                        kod += "p,";
+                    else if (odchylsemafora == 2)
+                        kod += "yn,";
+                }
+                // wskaźnik 1
+                if (ppom == false & pziel == false)
+                {
+                    if (w19 == true)
+                        kod += "wsk_w19,";
+                    else if (w20 == true)
+                        kod += "wsk_w20,";
+                    else if (w24 == true)
+                        kod += "wsk_w24,";
+                }
+                else
+                    kod += ",";
+                // wskaźnik 2
+                if (w1 == true)
+                    kod += "wsk_w1,";
+                else
+                    kod += ",";
+                // wskaźnik 3
+                if (ppom == true)
+                {
+                    if (w19 == true)
+                        kod += "wsk_w19,";
+                    else if (w20 == true)
+                        kod += "wsk_w20,";
+                    else if (w24 == true)
+                        kod += "wsk_w24,";
+                }
+                else if (pziel == true)
+                {
+                    if (w19 == true)
+                        kod += "wsk_w19,";
+                    else if (w20 == true)
+                        kod += "wsk_w20,";
+                    else if (w24 == true)
+                        kod += "wsk_w24,";
+                }
+                else if (w19 == true)
+                {
+                    if (w20 == true)
+                        kod += "wsk_w20,";
+                    else if (w24 == true)
+                        kod += "wsk_w24,";
+                }
+                else if (w19 == false & w20 == true)
+                {
+                    if (w24 == true)
+                        kod += "wsk_w24,";
+                }
+                else
+                    kod += ",";
+                // wskaźnik 4
+                if (ppom == true)
+                {
+                    if (w19 == true)
+                    {
+                        if (w20 == true)
+                            kod += "wsk_w20,";
+                        else if (w24 == true)
+                            kod += "wsk_w24,";
+                    }
+                    if (w19 == false & w20 == true)
+                    {
+                        if (w24 == true)
+                            kod += "wsk_w24,";
+                    }
+                }
+                else if (pziel == true)
+                {
+                    if (w19 == true)
+                    {
+                        if (w20 == true)
+                            kod += "wsk_w20,";
+                        else if (w24 == true)
+                            kod += "wsk_w24,";
+                    }
+                    if (w19 == false & w20 == true)
+                    {
+                        if (w24 == true)
+                            kod += "wsk_w24,";
+                    }
+                }
+                else if (w19 == true & w20 == true)
+                {
+                    if (w24 == true)
+                        kod += "wsk_w24,";
+                }
+                else
+                    kod += ",";
+                // pas świetlny
+                if (ppom == false & pziel == false)
+                    kod += ",";
+                else
+                    kod += "pas,";
+                // wskaźnik powtarzacza lub W18
+                if (typsemafora == 2)
+                {
+                    if (kolejnoscpowtarzacza == 0)
+                        kod += "wsk_1sp,";
+                    else if (kolejnoscpowtarzacza == 1)
+                        kod += "wsk_2sp,";
+                    else if (kolejnoscpowtarzacza == 2)
+                        kod += "wsk_3sp,";
+                }
+                else if (w18 == true)
+                    kod += "wsk_w18,";
+                else
+                    kod += ",";
+                // komora 1
+                if (komora5 == 1)
+                    kod += "light00,";
+                else if (komora5 == 2)
+                    kod += "light01,";
+                else if (komora5 == 3)
+                    kod += "light03,";
+                else if (komora5 == 4)
+                    kod += "light04,";
+                else if (komora5 == 5)
+                    kod += "light05,";
+                else if (komora5 == 6)
+                    kod += "light07,";
+                else
+                    kod += ",";
+                // komora 2
+                if (komora4 == 1)
+                    kod += "light00,";
+                else if (komora4 == 2)
+                    kod += "light01,";
+                else if (komora4 == 3)
+                    kod += "light03,";
+                else if (komora4 == 4)
+                    kod += "light04,";
+                else if (komora4 == 5)
+                    kod += "light05,";
+                else if (komora4 == 6)
+                    kod += "light07,";
+                else
+                    kod += ",";
+                // komora 3
+                if (komora3 == 1)
+                    kod += "light00,";
+                else if (komora3 == 2)
+                    kod += "light01,";
+                else if (komora3 == 3)
+                    kod += "light03,";
+                else if (komora3 == 4)
+                    kod += "light04,";
+                else if (komora3 == 5)
+                    kod += "light05,";
+                else if (komora3 == 6)
+                    kod += "light07,";
+                else
+                    kod += ",";
+                // komora 4
+                if (komora2 == 1)
+                    kod += "light00,";
+                else if (komora2 == 2)
+                    kod += "light01,";
+                else if (komora2 == 3)
+                    kod += "light03,";
+                else if (komora2 == 4)
+                    kod += "light04,";
+                else if (komora2 == 5)
+                    kod += "light05,";
+                else if (komora2 == 6)
+                    kod += "light07,";
+                else
+                    kod += ",";
+                // komora 5
+                if (komora1 == 1)
+                    kod += "light00,";
+                else if (komora1 == 2)
+                    kod += "light01,";
+                else if (komora1 == 3)
+                    kod += "light03,";
+                else if (komora1 == 4)
+                    kod += "light04,";
+                else if (komora1 == 5)
+                    kod += "light05,";
+                else if (komora1 == 6)
+                    kod += "light07,";
+                else
+                    kod += ",";
+                // pas świetlny
+                if (ppom == true & pziel == true)
+                    kod += "light09,light10,";
+                else if (ppom == true & pziel == false)
+                    kod += "light09,,";
+                else if (ppom == false & pziel == true)
+                    kod += "light10,,";
+                else if (ppom == false & pziel == false)
+                    kod += ",,";
+                // unieważnienie
+                if (uniew == true)
+                    kod += "wsk_w31,";
+                else
+                    kod += ",";
+            }
+            PoleKodu.Text = kod;
         }
 
         #endregion
@@ -327,7 +632,6 @@ namespace Generator_semaforów
                     "\r\nw19 = " + w19 +
                     "\r\nw20 = " + w20 +
                     "\r\nw24 = " + w24 +
-                    "\r\nkarzelk = " + karzelk +
                     "\r\nuniew = " + uniew +
                     "\r\nppom = " + ppom +
                     "\r\npziel = " + pziel +
@@ -336,19 +640,21 @@ namespace Generator_semaforów
                     "\r\nkomora3 = " + komora3 +
                     "\r\nkomora4 = " + komora4 +
                     "\r\nkomora5 = " + komora5 +
+                    "\r\nilosckomor = " + ilosckomor +
                     "\r\npredkosc40 = " + predkosc40 +
                     "\r\npredkosc60 = " + predkosc60 +
                     "\r\npredkosc100 = " + predkosc100 +
                     "\r\npredkosc40na60 = " + predkosc40na60 +
                     "\r\npredkosc100naVmax = " + predkosc100naVmax +
-                    "\r\nkomoraBiala = " + komoraBiala;
+                    "\r\nkomoraBiala = " + komoraBiala +
+                    "\r\nkod = " + kod;
             debugger.Text = debug;
             
         }
 
         #endregion
 
-        #region rysowanie semaforu
+        #region rysowanie semafora
 
         private void rysujSemafor(byte typ, byte komora1, byte komora2, byte komora3, byte komora4, byte komora5)
         {
